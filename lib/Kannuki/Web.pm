@@ -5,6 +5,26 @@ use warnings;
 use utf8;
 use Kossy;
 
+sub config {
+    my $self = shift;
+    $self->{_config} ||= do $self->root_dir . '/config.pl';
+}
+
+sub htpasswd_file {
+    my $self = shift;
+    $self->{_htpasswd_file} ||= sub {
+        my $file = $self->config->{htpasswd_file};
+        return $self->root_dir. '/data/.htpasswd' unless $file;
+        $file .= $self->root_dir . $file unless $file =~ m!^/!;
+        $file;
+    }->();
+}
+
+sub htpasswd {
+    my $self = shift;
+    $self->{_htpasswd} ||= Authen::Htpasswd->new($self->htpasswd_file, { encrypt_hash => $self->config->{encrypt_hash} || 'md5' });
+}
+
 filter 'set_title' => sub {
     my $app = shift;
     sub {
