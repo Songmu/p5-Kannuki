@@ -1,0 +1,13 @@
+: cascade base
+: around content -> {
+<h1><: $stash.site_name :></h1>
+<h2>User Added</h2>
+
+<dl>
+<dt>username</dt>
+<dd><: $username :></dd>
+<dt>initial password (please inform to user)</dt>
+<dd><: $password :></dd>
+</dl>
+
+: }

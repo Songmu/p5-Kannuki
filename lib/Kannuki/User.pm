@@ -33,14 +33,14 @@ sub is_admin {
 
 sub role {
     my $self = shift;
-    my ($role) = $self->authen->extra_info;
-    $role // '';
+    my $extra_info = $self->authen->extra_info;
+    $extra_info->[0] // '';
 }
 
 sub is_registerd {
     my $self = shift;
-    my (undef, $is_registerd) = $self->authen->extra_info;
-    $is_registerd;
+    my $extra_info = $self->authen->extra_info;
+    $extra_info->[1];
 }
 
 

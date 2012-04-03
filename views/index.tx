@@ -9,7 +9,9 @@
 
 <ul>
 <li><a href="<: $c.req.uri_for('/change_password') :>">change password</li>
-
+: if $user.is_admin {
+<li><a href="<: $c.req.uri_for('/add_user') :>">add user</li>
+: }
 </ul>
 : }
 

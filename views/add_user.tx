@@ -1,0 +1,22 @@
+: cascade base
+: around content -> {
+<h1>Register</h1>
+
+<ul>
+: for $errors.keys() -> $key {
+<li><: $key :>: <: $errors[$key] :></li>
+: }
+</ul>
+
+<form method="POST">
+<dl>
+<dt>new user name</dt>
+<dd><input type="text" id="username" name="username" value="" /></dd>
+<dt>*your* password</dt>
+<dd><input type="password" id="password" name="password" value="" /></dd>
+</dl>
+<input type="submit" valie="add user" />
+</form>
+
+: }
+
