@@ -12,6 +12,8 @@
 <dl>
 <dt>new user name</dt>
 <dd><input type="text" id="username" name="username" value="" /></dd>
+<dt>is admin?</dt>
+<dd><input type="checkbox" id="is_admin" name="is_admin" /></dd>
 <dt>*your* password</dt>
 <dd><input type="password" id="password" name="password" value="" /></dd>
 </dl>
