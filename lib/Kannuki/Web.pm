@@ -5,6 +5,8 @@ use warnings;
 use utf8;
 use Kossy;
 
+use Kannuki::User;
+
 sub config {
     my $self = shift;
     $self->{_config} ||= do $self->root_dir . '/config.pl';
@@ -29,6 +31,10 @@ filter 'set_title' => sub {
     my $app = shift;
     sub {
         my ( $self, $c )  = @_;
+        my $user = $c->req->env->{REMOTE_USER};
+        if ($user) {
+            $c->stash->{user} = Kannuki::User->new($self->htpasswd->lookup_user($user))
+        }
         $c->stash->{site_name} = __PACKAGE__;
         $app->($self,$c);
     }
@@ -36,8 +42,23 @@ filter 'set_title' => sub {
 
 get '/' => [qw/set_title/] => sub {
     my ( $self, $c )  = @_;
-    $c->render('index.tx', { greeting => "Hello" });
+    my $user = $c->stash->{user};
+    if ($user) {
+        $c->render('index.tx', { greeting => "Hello ". $user->user_name });
+    }
+    else {
+        $c->redirect('/register');
+    }
 };
+
+get '/register' => sub {
+    my ($self, $c) = @_;
+    $c->res_404;
+    #$c->render('index.tx', { greeting => "Register User" });
+};
+
+
+
 
 get '/json' => sub {
     my ( $self, $c )  = @_;
@@ -51,6 +72,39 @@ get '/json' => sub {
     ]);
     $c->render_json({ greeting => $result->valid->get('q') });
 };
+
+1;
+
+package Kossy::Connection;
+use strict;
+use warnings;
+use utf8;
+
+sub is_post {
+    shift->req->method eq 'POST';
+}
+
+my %code_map = (
+    400 => 'Bad Request',
+    401 => 'Unauthorized',
+    403 => 'Forbidden',
+    404 => 'Not Found',
+    500 => 'Internal Server Error',
+    503 => 'Service Unavailable',
+);
+
+for my $code (keys %code_map) {
+    my $text = $code_map{$code};
+    my $method = "res_$code";
+    no strict 'refs';
+    *{'Kossy::Connection::' . $method} = sub {
+        use strict 'refs';
+        my $self = shift;
+        $self->res->code($code);
+        $self->res->body($text);
+        $self->res;
+    };
+}
 
 1;
 
