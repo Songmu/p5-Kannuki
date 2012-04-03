@@ -6,6 +6,7 @@ use utf8;
 use Kossy;
 
 use Kannuki::User;
+use String::Random;
 
 sub config {
     my $self = shift;
@@ -27,7 +28,7 @@ sub htpasswd {
     $self->{_htpasswd} ||= Authen::Htpasswd->new($self->htpasswd_file, { encrypt_hash => $self->config->{encrypt_hash} || 'md5' });
 }
 
-filter 'set_title' => sub {
+filter 'get_user' => sub {
     my $app = shift;
     sub {
         my ( $self, $c )  = @_;
@@ -40,14 +41,22 @@ filter 'set_title' => sub {
     }
 };
 
-get '/' => [qw/set_title/] => sub {
+get '/' => [qw/get_user/] => sub {
     my ( $self, $c )  = @_;
     my $user = $c->stash->{user};
     if ($user) {
-        $c->render('index.tx', { greeting => "Hello ". $user->username });
+        if ($user->is_registerd) {
+            $c->render('index.tx', { greeting => "Hello ". $user->username });
+        }
+        else {
+            $c->redirect('/change_password');
+        }
+    }
+    elsif (! -f $self->htpasswd_file) {
+        $c->redirect('/register');
     }
     else {
-        $c->redirect('/register');
+        $c->res_401;
     }
 };
 
@@ -84,8 +93,7 @@ router [qw/get post/] => '/register' => sub {
                 },
             ]);
             if (!$result->has_error) {
-                $result->valid->get('username');
-                $self->htpasswd->add_user($result->valid->get('username'), $result->valid->get('password'), 'owner');
+                $self->htpasswd->add_user($result->valid->get('username'), $result->valid->get('password'), 'owner', 1);
                 return $c->redirect('/');
             }
             $c->stash->{errors} = $result->errors;
@@ -93,6 +101,47 @@ router [qw/get post/] => '/register' => sub {
         $c->render('register.tx', {errors => $c->stash->{errors} || {}});
     }
 };
+
+router [qw/get post/] => '/change_password' => [qw/get_user/] => sub {
+    my ($self, $c) = @_;
+    my $user = $c->stash->{user};
+
+    if ($c->is_post) {
+        my $result = $c->req->validator([
+            old_password    => {
+                rule => [
+                    ['NOT_NULL', 'old password required'],
+                    [sub {
+                        my ($req, $val) = @_;
+                        $user->check_password($val);
+                    }, 'old password invalid'],
+                ],
+            },
+            password => {
+                rule => [
+                    ['NOT_NULL', 'password required']
+                ],
+            },
+            password_confirm => {
+                rule => [
+                    ['NOT_NULL', 'password_confirm required.'],
+                    [sub {
+                        my ($req, $val) = @_;
+                        $val eq $req->param('password');
+                    }, 'input password and password_confirm correctly.']
+                ],
+            },
+        ]);
+        if (!$result->has_error) {
+            $self->htpasswd->update_user($user->username, $result->valid->get('password'), $user->role, 1);
+            return $c->redirect('/');
+        }
+        $c->stash->{errors} = $result->errors;
+    }
+    $c->render('change_password.tx', {errors => $c->stash->{errors} || {}});
+};
+
+
 
 1;
 

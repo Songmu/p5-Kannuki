@@ -1,6 +1,15 @@
 : cascade base
 : around content -> {
-<h1><: $greeting :> <: $stash.site_name :></h1>
+<h1><: $stash.site_name :></h1>
+<h2><: $greeting :></h2>
 <p>Use this document as a way to quick start any new project.<br> All you get is this message and a barebones HTML document.</p>
+
+
+<h2>Menu</h2>
+
+<ul>
+<li><a href="<: $c.req.uri_for('/change_password') :>">change password</li>
+
+</ul>
 : }
 

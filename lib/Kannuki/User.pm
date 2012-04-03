@@ -17,6 +17,10 @@ sub username {
     shift->authen->username;
 }
 
+sub check_password {
+    shift->authen->check_password(@_);
+}
+
 sub is_owner {
     my $self = shift;
     $self->role eq 'owner';
@@ -33,10 +37,11 @@ sub role {
     $role // '';
 }
 
-
-
-
-
+sub is_registerd {
+    my $self = shift;
+    my (undef, $is_registerd) = $self->authen->extra_info;
+    $is_registerd;
+}
 
 
 1;
