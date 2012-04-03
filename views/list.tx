@@ -1,0 +1,19 @@
+: cascade base
+: around content -> {
+<h1>User List</h1>
+
+<ul>
+
+: for $users -> $user {
+<li>
+<: $user.username :>
+:   if !$user.is_owner && $stash.user.is_owner {
+<form method="POST" action="<: $c.req.uri_for('/delete_user') :>"><input type="hidden" id="username" name="username" value="<: $user.username :>" /><input type="submit" value="delete"></form>
+:   }
+</li>
+: }
+
+</ul>
+
+: }
+

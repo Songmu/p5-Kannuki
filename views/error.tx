@@ -1,0 +1,12 @@
+: cascade base
+: around content -> {
+<h1>Error</h1>
+
+<ul>
+: for $errors.keys() -> $key {
+<li><: $key :>: <: $errors[$key] :></li>
+: }
+</ul>
+
+: }
+
