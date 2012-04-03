@@ -5,7 +5,7 @@ use warnings;
 use utf8;
 
 sub new {
-    my ($cls, $authen) = shift;
+    my ($cls, $authen) = @_;
     bless {_authen => $authen}, $cls;
 }
 
@@ -13,8 +13,8 @@ sub authen {
     shift->{_authen};
 }
 
-sub user_name {
-    shift->authen->user_name;
+sub username {
+    shift->authen->username;
 }
 
 sub is_owner {

@@ -44,33 +44,54 @@ get '/' => [qw/set_title/] => sub {
     my ( $self, $c )  = @_;
     my $user = $c->stash->{user};
     if ($user) {
-        $c->render('index.tx', { greeting => "Hello ". $user->user_name });
+        $c->render('index.tx', { greeting => "Hello ". $user->username });
     }
     else {
         $c->redirect('/register');
     }
 };
 
-get '/register' => sub {
+router [qw/get post/] => '/register' => sub {
     my ($self, $c) = @_;
-    $c->res_404;
-    #$c->render('index.tx', { greeting => "Register User" });
-};
-
-
-
-
-get '/json' => sub {
-    my ( $self, $c )  = @_;
-    my $result = $c->req->validator([
-        'q' => {
-            default => 'Hello',
-            rule => [
-                [['CHOICE',qw/Hello Bye/],'Hello or Bye']
-            ],
+    if (-f $self->htpasswd_file) {
+        $c->res_403;
+    }
+    else {
+        if ($c->is_post) {
+            my $result = $c->req->validator([
+                username => {
+                    rule => [
+                        ['NOT_NULL', 'username required.'],
+                        [sub {
+                            my ($req, $val) = @_;
+                            $val =~ /\A[a-z]+(?:-[a-z]+)*\z/ms;
+                        }, 'invalid username']
+                    ],
+                },
+                password => {
+                    rule => [
+                        ['NOT_NULL', 'password required']
+                    ],
+                },
+                password_confirm => {
+                    rule => [
+                        ['NOT_NULL', 'password_confirm required.'],
+                        [sub {
+                            my ($req, $val) = @_;
+                            $val eq $req->param('password');
+                        }, 'input password and password_confirm correctly.']
+                    ],
+                },
+            ]);
+            if (!$result->has_error) {
+                $result->valid->get('username');
+                $self->htpasswd->add_user($result->valid->get('username'), $result->valid->get('password'), 'owner');
+                return $c->redirect('/');
+            }
+            $c->stash->{errors} = $result->errors;
         }
-    ]);
-    $c->render_json({ greeting => $result->valid->get('q') });
+        $c->render('register.tx', {errors => $c->stash->{errors} || {}});
+    }
 };
 
 1;
