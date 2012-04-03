@@ -1,0 +1,8 @@
+META.yml
+MYMETA*
+Makefile
+inc/
+cover_db
+junit_output.xml
+tmp/
+*.swp
