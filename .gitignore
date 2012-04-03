@@ -5,4 +5,5 @@ inc/
 cover_db
 junit_output.xml
 tmp/
+data/*
 *.swp
