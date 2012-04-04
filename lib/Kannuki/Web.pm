@@ -10,7 +10,7 @@ use String::Random;
 
 sub config {
     my $self = shift;
-    $self->{_config} ||= do $self->root_dir . '/config.pl';
+    $self->{_config} ||= (do $self->root_dir . '/config.pl') || {};
 }
 
 sub htpasswd_file {
