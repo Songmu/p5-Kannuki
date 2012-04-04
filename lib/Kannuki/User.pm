@@ -53,7 +53,7 @@ sub is_greater_than {
 sub _rank {
     +{
         owner   => 3,
-        admin   => 1,
+        admin   => 2,
         general => 1,
     }->{shift->role} || 0;
 }

@@ -6,7 +6,7 @@
 
 : for $users -> $user {
 <li>
-<: $user.username :>
+<: $user.username :> (<: $user.role :>)
 :   if $stash.user.is_greater_than($user) {
 <a href="<: $c.req.uri_for('/delete_user/' ~ $user.username) :>">delete</a>
 :   }
