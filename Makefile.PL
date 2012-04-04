@@ -6,7 +6,8 @@ WriteMakefile(
     PREREQ_PM     => {
         'Kossy' =>  '0.07',
         'Plack::Middleware::Auth::Basic'    => '0.01',
-        'Authen::Htpasswd'   => '0.01',
+        'Authen::Htpasswd'  => '0.01',
+        'String::Random'    => '0.01',
     },
     MIN_PERL_VERSION => '5.008001'
 );
