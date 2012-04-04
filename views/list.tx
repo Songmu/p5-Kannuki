@@ -7,8 +7,8 @@
 : for $users -> $user {
 <li>
 <: $user.username :>
-:   if !$user.is_owner && $stash.user.is_owner {
-<form method="POST" action="<: $c.req.uri_for('/delete_user') :>"><input type="hidden" id="username" name="username" value="<: $user.username :>" /><input type="submit" value="delete"></form>
+:   if $stash.user.is_greater_than($user) {
+<a href="<: $c.req.uri_for('/delete_user/' ~ $user.username) :>">delete</a>
 :   }
 </li>
 : }

@@ -1,6 +1,8 @@
 : cascade base
 : around content -> {
-<h1>Register</h1>
+<h1>Delete User</h1>
+
+<p><: $delete_user.username :>を削除します。</p>
 
 <ul>
 : for $errors.keys() -> $key {
@@ -11,15 +13,11 @@
 <form method="POST">
 <dl>
 <dt>new user name</dt>
-<dd><input type="text" id="username" name="username" value="" /></dd>
-: if $stash.user.is_owner {
-<dt>is admin?</dt>
-<dd><input type="checkbox" id="is_admin" name="is_admin" /></dd>
-: }
+<dd><input type="hidden" id="username" name="username" value="<: $delete_user.username :>" /></dd>
 <dt>*your* password</dt>
 <dd><input type="password" id="password" name="password" value="" /></dd>
 </dl>
-<input type="submit" valie="add user" />
+<input type="submit" valie="delete user" />
 </form>
 
 : }

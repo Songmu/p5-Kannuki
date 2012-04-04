@@ -177,7 +177,7 @@ router [qw/get post/] => '/add_user' => [qw/get_user/] => sub {
         if (!$result->has_error) {
             my $username = $result->valid->get('username');
             my $password = String::Random->new->randregex('[a-zA-Z0-9]{12}');
-            my $role     = $result->valid->get('is_admin') ? 'admin' : 'general';
+            my $role     = $result->valid->get('is_admin') && $user->is_owner ? 'admin' : 'general';
             $self->htpasswd->update_user($username, $password, $role, '0');
             return $c->render('add_user_complete.tx', {username => $username, password => $password});
         }
@@ -195,53 +195,57 @@ get '/list' => [qw/get_user/] => sub {
     $c->render('list.tx', {users => [map {Kannuki::User->new($_)} $self->htpasswd->all_users]});
 };
 
-post '/delete_user' => [qw/get_user/] => sub {
-    my ($self, $c) = @_;
-
+router [qw/get post/] => '/delete_user/:delete_user' => [qw/get_user/] => sub {
+    my ($self, $c, $args) = @_;
     my $user = $c->stash->{user};
-    return $c->res_403 unless $user->is_owner;
+    return $c->res_403 unless $user->is_admin;
 
-    my $result = $c->req->validator([
-        username => {
-            rule => [
-                ['NOT_NULL', 'username required.'],
-                [sub {
-                    my ($req, $val) = @_;
-                    $self->htpasswd->lookup_user($val);
-                }, "user not exists."],
-                [sub {
-                    my ($req, $val) = @_;
-                    $val ne $user->username;
-                }, "can't delete yourserlf."],
-                [sub {
-                    my ($req, $val) = @_;
-                    $val =~ /\A[a-z]+(?:-[a-z]+)*\z/ms;
-                }, 'invalid username'],
-            ],
-        },
-        password => {
-            rule => [
-                ['NOT_NULL', 'password required'],
-                [sub {
-                    my ($req, $val) = @_;
-                    $user->check_password($val);
-                }, 'password invalid'],
-            ],
-        },
-    ]);
+    my $delete_user = Kannuki::User->new($self->htpasswd->lookup_user($c->args->{delete_user}));
+    return $c->res_404 unless $delete_user;
 
-    if (!$result->has_error) {
-        $self->htpasswd->delete_user($result->valid->get('username'));
-        $c->redirect('/list');
+    return $c->res_403 unless $user->is_greater_than($delete_user);
+
+    if ($c->is_post) {
+        my $result = $c->req->validator([
+            username => {
+                rule => [
+                    ['NOT_NULL', 'username required.'],
+                    [sub {
+                        my ($req, $val) = @_;
+                        $self->htpasswd->lookup_user($val);
+                    }, "user not exists."],
+                    [sub {
+                        my ($req, $val) = @_;
+                        $val ne $user->username;
+                    }, "can't delete yourserlf."],
+                    [sub {
+                        my ($req, $val) = @_;
+                        $val =~ /\A[a-z]+(?:-[a-z]+)*\z/ms;
+                    }, 'invalid username'],
+                ],
+            },
+            password => {
+                rule => [
+                    ['NOT_NULL', 'password required'],
+                    [sub {
+                        my ($req, $val) = @_;
+                        $user->check_password($val);
+                    }, 'password invalid'],
+                ],
+            },
+        ]);
+        if (!$result->has_error) {
+            $self->htpasswd->delete_user($result->valid->get('username'));
+            return $c->redirect('/list');
+        }
+        $c->stash->{errors} = $result->errors;
     }
-    else {
-        $c->render('error.tx', {errors => $result->errors});
-    }
+
+    $c->render('delete_user.tx', {
+        errors      => $c->stash->{errors},
+        delete_user => $delete_user,
+    });
 };
-
-
-
-
 
 
 1;

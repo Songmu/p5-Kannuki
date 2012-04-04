@@ -6,6 +6,7 @@ use utf8;
 
 sub new {
     my ($cls, $authen) = @_;
+    return unless $authen;
     bless {_authen => $authen}, $cls;
 }
 
@@ -43,5 +44,18 @@ sub is_registerd {
     $extra_info->[1];
 }
 
+sub is_greater_than {
+    my ($self, $target_user) = @_;
+
+    $self->_rank > $target_user->_rank;
+}
+
+sub _rank {
+    +{
+        owner   => 3,
+        admin   => 1,
+        general => 1,
+    }->{shift->role} || 0;
+}
 
 1;
